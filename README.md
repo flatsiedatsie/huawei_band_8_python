@@ -20,7 +20,8 @@ Also replace the client bluetooth mac address with that of your own client devic
 
 You may need to reset your band before it will show up in a scan / before you can connect to it.
 
-Finally, I made some small additions to `device_config.py`, so you'll want to override that file inside `lib/huawei`
+Finally, I made some small additions to device_config.py, so you'll want to override that file inside `lib/huawei`. Original file: https://github.com/zyv/huawei-lpv2/blob/master/huawei/services/device_config.py
+
 
 
 
@@ -55,3 +56,14 @@ Services found for device
 		Service: 00003802-0000-1000-8000-00805f9b34fb (Handle: 768): Vendor specific
 		Characteristics: [['00004a02-0000-1000-8000-00805f9b34fb', 'Vendor specific', 769, ['read', 'write', 'notify']]]
 ```
+
+
+
+Grep command to search for hex command codes in the Gadgetbridge source code (e.g. searching for `public static final byte id = 0x37;`, which is the music control)
+```
+grep -Rnw . -e 'public static final byte id = 0x37'
+```
+Which should then lead to: https://codeberg.org/Freeyourgadget/Gadgetbridge/src/branch/master/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/devices/huawei/packets/MusicControl.java
+
+See also:
+https://codeberg.org/Freeyourgadget/Gadgetbridge/src/branch/master/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/devices/huawei/packets/DeviceConfig.java
