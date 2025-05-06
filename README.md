@@ -31,6 +31,9 @@ Finally, I made some small additions to device_config.py, so you'll want to over
 
 # Other
 
+Useful links:
+- https://gist.github.com/psolyca/68fdfee0960737c1234f8d7f7a6c143a
+
 
 The output from the BLE scan:
 ```
