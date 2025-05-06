@@ -1,6 +1,15 @@
 # Huawei Band 8 Python test
 
-Tested on Mac OS, but doesn't work. it doesn't complete the auth phase yet.
+An attempt to connect to a Huawei fitness band and get some basic data from it, like battery level and daily steps.
+
+Tested on Mac OS, but currently doesn't work. it doesn't complete the auth phase yet.
+
+### Based on
+https://github.com/zyv/huawei-lpv2
+
+
+### More information
+https://github.com/zyv/huawei-lpv2/issues/11
 
 
 ### Getting started
