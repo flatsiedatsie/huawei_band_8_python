@@ -1,1 +1,2 @@
+bleak
 git+https://github.com/zyv/huawei-lpv2.git
