@@ -70,3 +70,9 @@ Which should then lead to: https://codeberg.org/Freeyourgadget/Gadgetbridge/src/
 
 See also:
 https://codeberg.org/Freeyourgadget/Gadgetbridge/src/branch/master/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/devices/huawei/packets/DeviceConfig.java
+
+
+See full BT debug output
+```
+btmon -p debug
+```
