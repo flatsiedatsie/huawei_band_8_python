@@ -85,6 +85,11 @@ class Band:
         self._expected_service_id = None
         self._expected_command_id = None
         self._events = {}
+        
+        self.sent_sync_response = False
+        self.sent_sync_response2 = False
+        self.received_music_message = False
+        self.retried_auth = False
 
     @property
     def _credentials(self):
@@ -122,15 +127,22 @@ class Band:
             logger.debug(f"Current state: {self.state}, received from '{sender}': {hexlify(bytes(data))}")
             #self._packet = Packet.from_bytes(data)
             _received_packet = Packet.from_bytes(data)
-            logger.debug(f"band -> _receive_data: Parsed response packet: {_received_packet}")
-        
+            logger.debug(f"band -> _receive_data: Parsed response packet: \n{_received_packet}\n")
+            
+            print(" ) ) )  _received_packet.command: ", _received_packet.command)
+            
             event_key = str(_received_packet.service_id) + '-' + str(_received_packet.command_id)
-            print("band -> _receive_data: event_key: ", event_key);
-        
+            print("band -> _receive_data: event_key: ", event_key)
+            
+            await asyncio.sleep(0.5)
+            
             if event_key in self._events.keys():
                 print("\nband -> _receive_data: FOUND IT. Likely calling a function next.\n")
             
                 try:
+                    
+                    
+                    
                     
                     self._events[event_key]['f'](_received_packet.command)
                     #result = func(self._packet.command)
@@ -143,6 +155,8 @@ class Band:
                         await asyncio.sleep(1)
                         await self.handshake_part2()
                         #await self.handshake_part1()
+                        
+                        
                 
                     elif event_key == '1-8':
                         print("\nreceived battery level")
@@ -162,10 +176,12 @@ class Band:
                         print("received a 1-61 message. Ignoring for now..")
                         #print("\ntrying anticipated band.handshake_part3")
                         #await self.handshake_part3()
+                        
+                        
                     
                     elif event_key == '55-1':
                         print("received an anticipated sync message")
-                        await self.sync_respond()
+                        #await self.sync_respond()
             
                     else:
                         print("UNIMPLEMENTED EVENT KEY: ", event_key)
@@ -174,21 +190,40 @@ class Band:
                 except Exception as ex:
                     print("caught error in _receive_data: ", ex)
                     
+                    if self.retried_auth == False:
+                        self.retried_auth = True
+                        await asyncio.sleep(1)
+                        await self.handshake_part2()
                     
                 
         
         
         
-        
+            elif event_key == '37-3':
+                    print("received an unrequested music control message")
+                    #await self.sync_respond()
+                    
+                    #device_config._process_authentication()
+                    
+                    if self.received_music_message == False:
+                        self.received_music_message = True
+                        await asyncio.sleep(5)
+                        await self.handshake_part3()
+                    else:
+                        print("received another unexpected music control message")
         
             elif event_key == '55-1':
-                    print("received a random sync message")
+                    print("received an unrequested sync message, responding")
                     await self.sync_respond()
         
             elif event_key == '1-61':
-                 print("received 1-61 (ignoring)")
+                 print("received an unrequested 1-61 (unkown use - maybe authentification response?)")
                  #print("\ntrying band.handshake_part3")
                  #await self.handshake_part3()
+                 
+                 self._process_authentication(_received_packet.command)
+                 await self.sync_respond2()
+                 
         
             """
             #assert self.state.name.startswith("Requested"), "unexpected packet"
@@ -222,7 +257,7 @@ class Band:
             """
             
         except Exception as ex:
-            print("caught error in _receive_data: ", ex)
+            print("\n!!!\nCAUGHT GENERAL ERROR in _receive_data: ", ex)
         
         
 
@@ -275,14 +310,36 @@ class Band:
     async def sync_respond(self):
         print("in sync_respond")
         
-        request = device_config.reply_ok(
-            self.link_params.auth_version,
-            self.client_serial,
-            self.device_mac,
-            **self._credentials,
-        )
-        await self._send_data(request,None)
-        print("sync response sent")
+        if self.sent_sync_response == False:
+            self.sent_sync_response = True
+            
+            #await asyncio.sleep(1)
+        
+            request = device_config.reply_ok(
+                self.link_params.auth_version,
+                self.client_serial,
+                self.device_mac,
+                **self._credentials,
+            )
+            await self._send_data(request,None)
+            print("sync response sent")
+        
+    async def sync_respond2(self):
+        print("in sync_respond 2")
+        
+        if self.sent_sync_response2 == False:
+            self.sent_sync_response2 = True
+            
+            #await asyncio.sleep(1)
+        
+            request = device_config.reply_ok2(
+                self.link_params.auth_version,
+                self.client_serial,
+                self.device_mac,
+                **self._credentials,
+            )
+            await self._send_data(request,None)
+            print("sync response 2 sent")
         
 
     async def _transact(self, request: Packet, func: Callable, states: Optional[Tuple[BandState, BandState]] = None):
@@ -307,7 +364,7 @@ class Band:
     async def connect(self):
         print("band -> connect")
         if not self.client.is_connected:
-            print("self.connect: not conencted, so attempting to connect with client")
+            print("self.connect: not connected, so attempting to connect with client")
             await self.client.connect()
         await self.client.start_notify(GATT_READ, self._receive_data)
         self.state = BandState.Connected
@@ -382,8 +439,9 @@ class Band:
         )
         states = (BandState.RequestedAuthentication, BandState.ReceivedAuthentication)
         
-        print("HANDSHAKE_part2; HALFWAY STATES: ", states)
+        print("HANDSHAKE_part2: HALFWAY STATES: ", states)
         await self._shout(request, self._process_authentication, states)
+        #await self._shout(request, device_config._process_authentication, states)
         print("\nsent handshake part2 (request auth)\n\n\n\n+\n\n")
 
 
@@ -511,7 +569,12 @@ class Band:
 
     def _process_authentication(self, command: Command):
         print(" in _process_authentication. ", self.state, BandState.RequestedAuthentication)
+        print(" _process_authentication: command: ", command)
         #assert self.state == BandState.RequestedAuthentication, "bad state"
+        
+        #if not '' in command:
+            
+        
         device_config.process_authentication(
             self.link_params.auth_version,
             command,
@@ -629,10 +692,6 @@ def main():
         config[DEVICE_NAME] = {
             #"device_uuid": "D914AD48-48BE-0265-7B36-4665721BCD30", 
             "device_uuid": "D914AD48-48BE-0265-7B36-4665721BCD30", 
-            
-           
-            
-            
             "device_mac": "FC:86:2A:E1:36:D2",
             "client_mac": "F8:4d:89:5F:91:65",
             "secret": base64.b64encode(generate_nonce()).decode(),
