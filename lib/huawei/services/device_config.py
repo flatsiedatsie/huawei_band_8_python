@@ -275,16 +275,22 @@ def request_authentication(auth_version: AuthVersion, client_nonce: bytes, serve
 @check_result
 def process_authentication(auth_version: AuthVersion, command: Command, client_nonce: bytes, server_nonce: bytes):
     print("device_config.py: in process_authentication")
-    expected_answer = digest_response(auth_version, client_nonce, server_nonce)
-    actual_answer = command[DeviceConfig.Auth.Tags.Challenge].value
+    try:
+        expected_answer = digest_response(auth_version, client_nonce, server_nonce)
+        if command[DeviceConfig.Auth.Tags.Challenge]:
+            actual_answer = command[DeviceConfig.Auth.Tags.Challenge].value
 
-    print("device_config.py: process_authentication: expected_answer: ", expected_answer)
-    print("device_config.py: process_authentication: actual_answer: ", actual_answer)
+            print("device_config.py: process_authentication: expected_answer: ", expected_answer)
+            print("device_config.py: process_authentication: actual_answer: ", actual_answer)
 
-    if expected_answer != actual_answer:
-        raise MismatchError("challenge answer", actual_answer, expected_answer)
+            if expected_answer != actual_answer:
+                raise MismatchError("challenge answer", actual_answer, expected_answer)
 
-    logger.info("Process authentication:\n\tDone!")
+            logger.info("Process authentication:\n\tDone!")
+        else:
+            print("process_authentication: there was no auth answer in the packet")
+    except Exception as ex:
+        print("\n!!!\ndevice_config.py: caught error in process_authentication: ", str(ex))
 
 
 def request_bond_params(client_serial: str, client_mac: str) -> Packet:
@@ -367,7 +373,22 @@ def reply_ok(auth_version: AuthVersion, client_serial: str, device_mac: str, key
         #service_id=DeviceConfig.id, # 1
         #command_id=DeviceConfig.ReplyOK.id, # 61 ?? 55?
         service_id=55, # 1
-        command_id=127, # 61 ?? 55?
+        command_id=127, # 127? # 61 ?? 55?
+        command=Command(
+            tlvs=[
+                #TLV(tag=DeviceConfig.ReplyOK.Tags.setStatus, value=b"\x20"),
+                TLV(tag=DeviceConfig.ReplyOK.Tags.SetStatus, value=b"\x000186A0"),
+            ],
+        ),
+    )
+
+
+def reply_ok2(auth_version: AuthVersion, client_serial: str, device_mac: str, key: bytes, iv: bytes) -> Packet:
+    return Packet(
+        #service_id=DeviceConfig.id, # 1
+        #command_id=DeviceConfig.ReplyOK.id, # 61 ?? 55?
+        service_id=1, # 1
+        command_id=61, # 127? # 61 ?? 55?
         command=Command(
             tlvs=[
                 #TLV(tag=DeviceConfig.ReplyOK.Tags.setStatus, value=b"\x20"),
