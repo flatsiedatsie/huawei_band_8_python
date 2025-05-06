@@ -21,3 +21,37 @@ Also replace the client bluetooth mac address with that of your own client devic
 You may need to reset your band before it will show up in a scan / before you can connect to it.
 
 Finally, I made some small additions to `device_config.py`, so you'll want to override that file inside `lib/huawei`
+
+
+
+
+
+
+
+# Other
+
+
+The output from the BLE scan:
+```
+NAME:  HUAWEI Band 8-6D2
+Services found for device
+	Device address: D914AD48-48BE-0265-7B36-4665721BCD30
+	Device name: HUAWEI Band 8-6D2
+	Services:
+		Service
+		Description: HUAWEI Technologies Co.: Ltd.
+		Service: 0000fe86-0000-1000-8000-00805f9b34fb (Handle: 42): HUAWEI Technologies Co.: Ltd.
+		Characteristics: [['0000fe01-0000-1000-8000-00805f9b34fb', 'Vendor specific', 43, ['write-without-response', 'write']], ['0000fe02-0000-1000-8000-00805f9b34fb', 'Vendor specific', 45, ['notify']]]
+		Service
+		Description: Device Information
+		Service: 0000180a-0000-1000-8000-00805f9b34fb (Handle: 48): Device Information
+		Characteristics: [['00002a29-0000-1000-8000-00805f9b34fb', 'Manufacturer Name String', 49, ['read']], ['00002a24-0000-1000-8000-00805f9b34fb', 'Model Number String', 51, ['read']], ['00002a25-0000-1000-8000-00805f9b34fb', 'Serial Number String', 53, ['read']], ['00002a26-0000-1000-8000-00805f9b34fb', 'Firmware Revision String', 55, ['read']], ['00002a27-0000-1000-8000-00805f9b34fb', 'Hardware Revision String', 57, ['read']], ['00002a28-0000-1000-8000-00805f9b34fb', 'Software Revision String', 59, ['read']]]
+		Service
+		Description: Unknown
+		Service: cc353442-be58-4ea2-876e-11d8d6976366 (Handle: 512): Unknown
+		Characteristics: [['c551c36a-0377-4a29-9657-74ffb655a188', 'Unknown', 513, ['read', 'write', 'notify']]]
+		Service
+		Description: Vendor specific
+		Service: 00003802-0000-1000-8000-00805f9b34fb (Handle: 768): Vendor specific
+		Characteristics: [['00004a02-0000-1000-8000-00805f9b34fb', 'Vendor specific', 769, ['read', 'write', 'notify']]]
+```
